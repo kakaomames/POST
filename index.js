@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POSTリクエストとレスポンス表示</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        #response-container {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            white-space: pre-wrap; /* 改行を保持 */
+            word-wrap: break-word; /* 長い単語の途中で改行 */
+        }
+        textarea {
+            width: 80%;
+            height: 50px;
+            margin-bottom: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>APIにPOSTリクエストを送信</h1>
+
+    <label for="youtubeUrl">YouTube動画のURL:</label><br>
+    <textarea id="youtubeUrl" placeholder="例: https://www.youtube.com/watch?v=dQw4w9WgXcQ"></textarea><br>
+
+    <label for="authToken">Authorization Token (Bearer):</label><br>
+    <input type="text" id="authToken" style="width: 80%; margin-bottom: 10px;" placeholder="APIトークンを入力 (任意)"><br>
+
+    <button onclick="sendPostRequest()">リクエスト送信</button>
+
+    <h2>レスポンス:</h2>
+    <div id="response-container">
+        ここにAPIからのレスポンスが表示されます。
+    </div>
+
+    <script>
+        async function sendPostRequest() {
+            const url = 'https://ytmm-api-s1.shamimomo.net/v1/download';
+            const youtubeUrlInput = document.getElementById('youtubeUrl').value;
+            const authTokenInput = document.getElementById('authToken').value;
+            const responseContainer = document.getElementById('response-container');
+
+            // URLが入力されているかチェック
+            if (!youtubeUrlInput) {
+                responseContainer.textContent = 'YouTubeのURLを入力してください。';
+                return;
+            }
+
+            // リクエストボディの準備
+            const requestBody = JSON.stringify({
+                url: youtubeUrlInput
+            });
+
+            const headers = {
+                'Content-Type': 'application/json',
+                'Accept': 'text/event-stream' // ログから推測されるAcceptヘッダー
+            };
+
+            // 認証トークンがある場合のみAuthorizationヘッダーを追加
+            if (authTokenInput) {
+                headers['Authorization'] = `Bearer ${authTokenInput}`;
+            }
+
+            try {
+                responseContainer.textContent = 'リクエストを送信中...';
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: headers,
+                    body: requestBody
+                });
+
+                // レスポンスの処理
+                if (response.ok) { // ステータスコードが200番台の場合
+                    // text/event-stream の場合は、通常のtext()ではなく、FileReaderなどを使う場合がありますが、
+                    // ここではシンプルなテキストとして処理します。
+                    // 実際にはServer-Sent Events (SSE) として処理する必要があります。
+                    const responseText = await response.text();
+                    responseContainer.textContent = '成功:\n' + responseText;
+                } else {
+                    const errorText = await response.text(); // エラーレスポンスもテキストとして取得
+                    responseContainer.textContent = `エラー: ${response.status} ${response.statusText}\n${errorText}`;
+                }
+            } catch (error) {
+                // ネットワークエラーやCORSエラーなど
+                console.error('Fetchエラー:', error);
+                responseContainer.textContent = `リクエスト中にエラーが発生しました。\n詳細: ${error.message}\n\nCORSポリシー、またはネットワークの問題である可能性があります。`;
+            }
+        }
+    </script>
+</body>
+</html>
