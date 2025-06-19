@@ -70,8 +70,8 @@
             
             <div class="form-group">
                 <label for="apiUrl" class="block text-gray-700 text-sm mb-1">API URL:</label>
-                <input type="text" id="apiUrl" value="/youtubei/v1/player?prettyPrint=false" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block">
-                <p class="text-gray-500 text-xs mt-1">プロキシ経由でアクセスしている場合は、相対パスのままでOKです。</p>
+                <input type="text" id="apiUrl" value="https://www.youtube.com/youtubei/v1/player?prettyPrint=false" class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block">
+                <p class="text-gray-500 text-xs mt-1">YouTubeのPlayer APIの完全なURLを指定します。</p>
             </div>
 
             <button id="sendRequestBtn" class="btn btn-primary w-full flex items-center justify-center space-x-2">
@@ -117,24 +117,22 @@
                 responseOutput.classList.remove('error-message');
 
                 // POSTデータペイロードの構築
-                // HARファイルから取得したPlayer APIリクエストのpostDataを参考に構築
-                // videoIdとclientVersion、visitorDataは動的に設定
                 const requestPayload = {
                     "videoId": videoId,
                     "context": {
                         "client": {
                             "hl": "ja",
                             "gl": "JP",
-                            "remoteHost": "", // ここは実行環境によって変わるので空にするか、自動取得ロジックが必要
-                            "deviceMake": "Apple", // HARファイルから取得
+                            "remoteHost": "",
+                            "deviceMake": "Apple",
                             "deviceModel": "",
                             "visitorData": "CgtSR0VneUVxaXZhTSj4qs_CBjIKCgJKUBIEGgAgRg%3D%3D", // HARから取得、またはランダム生成。固定値だと弾かれる可能性あり
-                            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Safari/605.1.15,gzip(gfe)", // HARから取得
-                            "clientName": "WEB_EMBEDDED_PLAYER", // HARから取得
+                            "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.5 Safari/605.1.15,gzip(gfe)",
+                            "clientName": "WEB_EMBEDDED_PLAYER",
                             "clientVersion": "1.20250616.22.00", // HARから取得。最新のものが望ましい
                             "osName": "Macintosh",
                             "osVersion": "10_15_7",
-                            "originalUrl": `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0`, // 簡易的なURL
+                            "originalUrl": `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0`,
                             "platform": "DESKTOP",
                             "clientFormFactor": "UNKNOWN_FORM_FACTOR",
                             "configInfo": { /* 省略: この部分は非常に長く、動的であるため、省略または必要に応じて追加 */ },
@@ -163,7 +161,7 @@
                                 "visibilityFraction": 1,
                                 "visibilityFractionSource": "EMBEDDED_PLAYER_VISIBILITY_FRACTION_SOURCE_INTERSECTION_OBSERVER",
                                 "ancestorOrigins": [],
-                                "autoplayBrowserPolicy": "AUTOPLAY_BROWSER_POLICY_UNSPECIFIED",
+                                "autoplayBrowserPolicy": "AUTOPLAY_BROWSER_BIP_UNSPECIFIED", // HARから取得。変更される可能性あり
                                 "autoplayIntended": false,
                                 "autoplayStatus": "AUTOPLAY_STATUS_NOT_ATTEMPTED"
                             }
@@ -175,8 +173,8 @@
                         "contentPlaybackContext": {
                             "html5Preference": "HTML5_PREF_WANTS",
                             "lactMilliseconds": "6",
-                            "referer": `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0`, // 簡易的なURL
-                            "signatureTimestamp": 20256, // HARから取得。これはbase.jsのバージョンと関連
+                            "referer": `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=0`,
+                            "signatureTimestamp": 20256, // HARから取得。base.jsのバージョンと関連
                             "autoCaptionsDefaultOn": false,
                             "mdxContext": {},
                             "playerWidthPixels": 1080,
@@ -200,10 +198,11 @@
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
-                            // 'X-Goog-Visitor-Id': 'CgtSR0VneUVxaXZhTSj4qs_CBjIKCgJKUBIEGgAgRg%3D%3D', // 必要に応じて
-                            // 'X-Youtube-Client-Name': '56', // 必要に応じて
-                            // 'X-Youtube-Client-Version': '1.20250616.22.00' // 必要に応じて
-                            // その他のヘッダーもHARから必要に応じて追加
+                            // HARファイルから見つかった重要なヘッダーを追加
+                            'X-Goog-Visitor-Id': 'CgtSR0VneUVxaXZhTSj4qs_CBjIKCgJKUBIEGgAgRg%3D%3D', // 例: あなたのHARから取得
+                            'X-Youtube-Client-Name': '56', // 例: あなたのHARから取得
+                            'X-Youtube-Client-Version': '1.20250616.22.00', // 例: あなたのHARから取得
+                            // User-Agentはブラウザが自動で設定しますが、特定のUser-Agentが必要な場合はここに追加
                         },
                         body: JSON.stringify(requestPayload)
                     });
